@@ -2,19 +2,19 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
-from pathlib import Path
+
 from dotenv import load_dotenv
 
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
+from sklearn.base import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import classification_report, confusion_matrix
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-
-from sklearn.metrics import classification_report, confusion_matrix
 
 # === carrega variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -93,3 +93,85 @@ def build_pipelines():
 
     return pipelines, params
 
+# === realiza o grid-search com cross-validate para cada pipeline, retornando estimadores ajustados
+def train_tune(pipelines: dict, params: dict, x_train: pd.DataFrame, y_train: pd.Series) -> dict:
+    estimators = {}
+
+    for name, pipeline in pipelines.items():
+        print(f"treinamento {name}...")
+        
+        grid = GridSearchCV(
+            estimator=pipeline,
+            param_grid=params.get(name, {}),
+            cv=5,
+            scoring="accuracy",
+            n_jobs=-1,
+            verbose=1
+        )
+        
+        grid.fit(x_train, y_train)
+        
+        estimators[name] = grid.best_estimator_
+        
+        print(f"   -> melhor cv: {grid.best_score_:.4f}")
+        print(f"   -> parametros: {grid.best_params_}")
+    
+    return estimators
+
+# === avalia cada modelo, retorna a acurácia e imprime o relatórios
+def evaluate(models: dict, x_test: pd.DataFrame, y_test: pd.Series) -> dict:
+    results = {}
+
+    for name, model in models.items():
+        print(f"Avaliando {name}...")
+
+        y_pred = model.predict(x_test)
+        acc = accuracy_score(y_test, y_pred)
+
+        print(f" Acurácia: {acc:.4f}")
+        print(classification_report(y_test, y_pred, digits=4))
+        print(confusion_matrix(y_test, y_pred))
+        
+        results[name] = acc
+
+    return results
+
+# === seleciona o melhor modelo baseado na acurácia
+def select_best_model(results: dict, models: dict):
+    best_name = max(results, key=results.get)
+    best_model = models[best_name]
+    best_score = results[best_name]
+
+    print(f"Melhor modelo: {best_name} com acurácia de {best_score:.4f}")
+
+    return best_model
+
+# === salva o melhor modelo escolido
+def save_model(model):
+    joblib.dump(model, MODEL)
+    print(f"Modelo salvo em: {MODEL}")
+
+def main():
+    # 1 - carrega e pré-processa o dataset
+    dataframe = load_data()
+    dataframe = preprocess(dataframe)
+
+    # 2 - define as features e o split(dados de treinamento e de teste)
+    features = get_feature_columns(dataframe)
+    x_train, x_test, y_train, y_test = split_data(dataframe, features, TARGET)
+
+    # 3 - monta o pipeline e parametros
+    pipelines, params = build_pipelines()
+
+    # 4 - realiza o treino e o ajuste
+    models = train_tune(pipelines, params, x_train, y_train)
+
+    # 5 - realiza a avaliação dos modelos treinados
+    result = evaluate(models, x_test, y_test)
+
+    # 6 - seleciona e salva o melhor modelo
+    best_model = select_best_model(result, models)
+    save_model(best_model)
+
+if __name__ == "__main__":
+    main()
