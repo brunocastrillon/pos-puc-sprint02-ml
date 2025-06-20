@@ -5,11 +5,11 @@ import os
 
 from dotenv import load_dotenv
 
+from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.base import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -30,10 +30,10 @@ TARGET = "Explicit Track"
 def load_data() -> pd.DataFrame:
     if SOURCE == "url":
         print(f"Carregando dados de URL: {URL}")
-        return pd.read_csv(URL, sep=";", encoding='latin-1')
+        return pd.read_csv(URL, encoding='latin-1')
     elif SOURCE == "local":
         print(f"Carregando dados de arquivo local: {FILE}")
-        return pd.read_csv(FILE, sep=";", encoding='latin-1')
+        return pd.read_csv(FILE, encoding='latin-1')
     else:
         raise ValueError("fonte de dados inválida")
 
@@ -44,7 +44,9 @@ def preprocess(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 # === retorna uma lista de colunas numéricas preditoras, excluíndo a coluna alvo
 def get_feature_columns(dataframe: pd.DataFrame) -> list:
-    return dataframe.select_dtypes(include=[np.number]).columns.drop(TARGET).tolist()
+    colunas_numericas = dataframe.select_dtypes(include=[np.number]).columns.drop(TARGET)
+    colunas_numericas_validas = [c for c in colunas_numericas if not dataframe[c].isna().all()]
+    return colunas_numericas_validas
 
 # === separando os conjutos de treino e teste
 def split_data(dataframe: pd.DataFrame, features: list, target: str, test_size: float = 0.2, random_state: int = 42):
@@ -57,18 +59,22 @@ def split_data(dataframe: pd.DataFrame, features: list, target: str, test_size: 
 def build_pipelines():
     pipelines = {
         "KNN": Pipeline([
+            ("imputer", SimpleImputer(strategy="mean")),
             ("scaler", StandardScaler()),
             ("model", KNeighborsClassifier())
         ]),
         "decision_tree": Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
             ("scaler", StandardScaler()),
             ("model", DecisionTreeClassifier(random_state=42))
         ]),
         "naive_bayes": Pipeline([
+            ("imputer", SimpleImputer(strategy="mean")),
             ("scaler", StandardScaler()),
             ("model", GaussianNB())
         ]),
         "SVM": Pipeline([
+            ("imputer", SimpleImputer(strategy="mean")),
             ("scaler", StandardScaler()),
             ("model", SVC(random_state=42))
         ]),                        
