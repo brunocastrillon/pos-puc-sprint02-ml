@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -14,59 +16,80 @@ from sklearn.svm import SVC
 
 from sklearn.metrics import classification_report, confusion_matrix
 
-# === setar os caminhos localhost ===
-DIRETORIO_BASE = os.path.dirname(__file__)
-CAMINHO_DATASET = os.path.join(DIRETORIO_BASE, "dataset", "most_streamed_spotify_songs_2024.csv")
-CAMINHO_ARTEFATO = os.path.join(DIRETORIO_BASE, "artifacts")
+# === carrega variáveis de ambiente do arquivo .env
+load_dotenv()
 
-os.makedirs(CAMINHO_ARTEFATO, exist_ok=True)
+# === configurações de ambiente
+SOURCE = os.getenv("DATA_SOURCE")
+URL = os.getenv("DATA_URL")
+FILE = os.getenv("DATA_FILE")
+MODEL = os.getenv("MODEL_PATH")
+TARGET = "Explicit Track"
 
-# === setar o caminho on-line ===
-URL_DATASET = "https://raw.githubusercontent.com/brunocastrillon/pos-puc-sprint02-ml/master/model/dataset/most_streamed_spotify_songs_2024.csv"
+# === carrega os dados de acordo com o ambiente setado em config.env
+def load_data() -> pd.DataFrame:
+    if SOURCE == "url":
+        print(f"Carregando dados de URL: {URL}")
+        return pd.read_csv(URL, sep=";", encoding='latin-1')
+    elif SOURCE == "local":
+        print(f"Carregando dados de arquivo local: {FILE}")
+        return pd.read_csv(FILE, sep=";", encoding='latin-1')
+    else:
+        raise ValueError("fonte de dados inválida")
 
-# === carregar os dados ===
-def carregar_dados(caminho_dataset):
-    data_frame = pd.read_csv(caminho_dataset, sep=";", encoding='latin-1')
+# === converte a coluna alvo para int
+def preprocess(dataframe: pd.DataFrame) -> pd.DataFrame:
+    dataframe[TARGET] = dataframe[TARGET].astype(int)
+    return dataframe
 
-    print(f"Dimensões do dataset: {data_frame.shape}")
-    data_frame.head(5)
+# === retorna uma lista de colunas numéricas preditoras, excluíndo a coluna alvo
+def get_feature_columns(dataframe: pd.DataFrame) -> list:
+    return dataframe.select_dtypes(include=[np.number]).columns.drop(TARGET).tolist()
 
-    print(data_frame.dtypes)
-    print(data_frame.isnull().sum())
+# === separando os conjutos de treino e teste
+def split_data(dataframe: pd.DataFrame, features: list, target: str, test_size: float = 0.2, random_state: int = 42):
+    x = dataframe[features]
+    y = dataframe[target]
 
-    print(data_frame["Explicit Track"].value_counts(normalize=True))
+    return train_test_split(x, y, test_size=test_size, random_state=random_state, stratify=y)
 
-    data_frame.describe().T
+# === define os pipelines para cada algoritimo e suas grades de hiperparâmetros
+def build_pipelines():
+    pipelines = {
+        "KNN": Pipeline([
+            ("scaler", StandardScaler()),
+            ("model", KNeighborsClassifier())
+        ]),
+        "decision_tree": Pipeline([
+            ("scaler", StandardScaler()),
+            ("model", DecisionTreeClassifier(random_state=42))
+        ]),
+        "naive_bayes": Pipeline([
+            ("scaler", StandardScaler()),
+            ("model", GaussianNB())
+        ]),
+        "SVM": Pipeline([
+            ("scaler", StandardScaler()),
+            ("model", SVC(random_state=42))
+        ]),                        
+    }
 
-    correlacao = data_frame.select_dtypes(include="number").corr()
-    correlacao["Explicit Track"].sort_values(ascending=False)
+    params = {
+        "KNN": {
+            "model__n_neighbors": [3, 5, 7, 9]
+        },
+        "decision_tree": {
+            "model__max_depth": [3, 5, 10, None]
+        },
+        "naive_bayes":  {
+            "model__var_smoothing": [1e-09, 1e-08, 1e-07]
+        },
+        "SVM":  {
+            "model__C": [0.1, 1, 10],
+            "model__kernel": ["linear", "rbf"],
+            "model__gamma": ["scale", "auto"]
+        }      
+    }
 
-    data_frame["Explicit Track"] = data_frame["Explicit Track"].astype(int)    
+    return pipelines, params
 
-    # === identificando colunas numericas
-    colunas_numericas = (data_frame.select_dtypes(include=[np.number]).columns.drop("Explicit Track").tolist())
-
-    # remove 'TIDAL Popularity' as it has all missing values
-    if 'TIDAL Popularity' in colunas_numericas:
-        colunas_numericas.remove('TIDAL Popularity')    
-
-    print(f"Features numéricas selecionadas ({len(colunas_numericas)}):")
-    print(colunas_numericas)
-
-    # === separando rotulos e atributos
-    x = data_frame[colunas_numericas]
-    y = data_frame["Explicit Track"]
-
-    return train_test_split(x, y, test_size=0.2, random_state=42, stratify=y)
-
-def configurar_modelos():
-    pass
-
-def treinar_modelos():
-    pass
-
-def salvar_modelo():
-    pass
-
-if __name__ == "__main__":
-    pass
