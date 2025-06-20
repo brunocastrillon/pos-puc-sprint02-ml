@@ -1,3 +1,8 @@
+"""
+Script para treinar o modelo de classificação de faixas explícitas no Spotify,
+utilizando variáveis de ambiente para configuração de origem dos dados.
+"""
+
 import pandas as pd
 import numpy as np
 import joblib
