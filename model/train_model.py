@@ -66,7 +66,7 @@ def build_pipelines():
         "decision_tree": Pipeline([
             ("imputer", SimpleImputer(strategy="median")),
             ("scaler", StandardScaler()),
-            ("model", DecisionTreeClassifier(random_state=42))
+            ("model", DecisionTreeClassifier(class_weight="balanced", random_state=42))
         ]),
         "naive_bayes": Pipeline([
             ("imputer", SimpleImputer(strategy="mean")),
@@ -76,7 +76,7 @@ def build_pipelines():
         "SVM": Pipeline([
             ("imputer", SimpleImputer(strategy="mean")),
             ("scaler", StandardScaler()),
-            ("model", SVC(random_state=42))
+            ("model", SVC(class_weight="balanced", probability=True, random_state=42))
         ]),                        
     }
 
@@ -110,7 +110,7 @@ def train_tune(pipelines: dict, params: dict, x_train: pd.DataFrame, y_train: pd
             estimator=pipeline,
             param_grid=params.get(name, {}),
             cv=5,
-            scoring="accuracy",
+            scoring="f1_macro", # scoring="accuracy" / scoring="recall" / scoring="precision"
             n_jobs=-1,
             verbose=1
         )
