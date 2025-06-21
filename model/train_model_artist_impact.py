@@ -44,10 +44,10 @@ PLATFORM_COLS = [
 # === carrega os dados de acordo com o ambiente setado em config.env
 def load_data() -> pd.DataFrame:
     if SOURCE == "url":
-        print(f"Carregando dados de URL: {URL}")
+        print(f"Carregando dados de URL: {URL}\n")
         return pd.read_csv(URL, encoding='latin-1')
     elif SOURCE == "local":
-        print(f"Carregando dados de arquivo local: {FILE}")
+        print(f"Carregando dados de arquivo local: {FILE}\n")
         return pd.read_csv(FILE, encoding='latin-1')
     else:
         raise ValueError("fonte de dados inválida")
@@ -71,6 +71,8 @@ def preprocess(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe[TARGET] = dataframe[TARGET].astype(int)
     return dataframe
 
+# 1 - Comparação entre plataformas
+
 # === calcula a correlação entre as métricas de cada plataforma
 def calculate_plataform_correlation(dataframe: pd.DataFrame) -> pd.DataFrame:
     colunas = [c for c in PLATFORM_COLS if c in dataframe.columns and not dataframe[c].isna().all()]
@@ -86,6 +88,41 @@ def scatter_plataform_correlation(dataframe: pd.DataFrame, colunas: list) -> pd.
     sns.pairplot(dataframe[colunas].dropna(), kind="reg", plot_kws={"scatter_kws": {"s": 10}})
     plt.suptitle("pairplot de métricas por plataforma", y=1.02)
     plt.show()
+
+# 2 - Impacto do artista
+
+# === realiza agregação das métricas por artista
+# === total_streams: soma de Spotify Streams / avg_popularity: média de Spotify Popularity / num_tracks: número de faixas por artista
+def calculate_artist_metrics(dataframe: pd.DataFrame) -> pd.DataFrame:
+    agregacao = (dataframe.groupby("Artist").agg(total_streams=("Spotify Streams", "sum"),
+                                                 avg_popularity=("Spotify Popularity", "mean"),
+                                                 num_tracks=("Artist", "size")
+                                                 ).reset_index()
+                )
+    return agregacao
+
+def plot_artitst_impact(dataframe: pd.DataFrame):
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(data=dataframe,
+                    x="num_tracks", y="total_streams",
+                    size="avg_popularity", sizes=(20,200),
+                    alpha=0.7)
+    plt.title("Artist Impact: Faixas vs Total de Strems")
+    plt.xlabel("Números de Faixas")
+    plt.ylabel("Streams Totais")
+    plt.show()
+
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(data=dataframe,
+                    x="avg_popularity", y="total_streams",
+                    size="num_tracks", sizes=(20,200),
+                    alpha=0.7, color="green")
+    plt.title("Artist Impact: Popularidade Média vs Stream Totais")
+    plt.xlabel("Popularidade Média (Spotify)")
+    plt.ylabel("Streams Totais")
+    plt.show()    
+
+# 3 - Classificação das faixa => Explicit Content
 
 # === retorna uma lista de colunas numéricas preditoras, excluíndo a coluna alvo
 def get_feature_columns(dataframe: pd.DataFrame) -> list:
@@ -148,8 +185,10 @@ def build_pipelines():
 def train_tune(pipelines: dict, params: dict, x_train: pd.DataFrame, y_train: pd.Series) -> dict:
     estimators = {}
 
+    print(f"\niniciando o treinamento...\n")
+
     for name, pipeline in pipelines.items():
-        print(f"treinamento {name}...")
+        print(f"\n{name}\n")
         
         grid = GridSearchCV(
             estimator=pipeline,
@@ -166,6 +205,8 @@ def train_tune(pipelines: dict, params: dict, x_train: pd.DataFrame, y_train: pd
         
         print(f"   -> melhor cv: {grid.best_score_:.4f}")
         print(f"   -> parametros: {grid.best_params_}")
+
+        print("\n" + "-" * 70 + "\n")
     
     return estimators
 
@@ -174,14 +215,20 @@ def evaluate(models: dict, x_test: pd.DataFrame, y_test: pd.Series) -> dict:
     results = {}
 
     for name, model in models.items():
-        print(f"Avaliando {name}...")
+        print(f"\nAvaliando {name}...\n")
 
         y_pred = model.predict(x_test)
         acc = accuracy_score(y_test, y_pred)
 
-        print(f" Acurácia: {acc:.4f}")
+        print(f"Acurácia: {acc:.4f}\n")
+        
+        print("relatório de classificação:")
         print(classification_report(y_test, y_pred, digits=4))
+        
+        print("matriz de confusão:")
         print(confusion_matrix(y_test, y_pred))
+        
+        print("\n" + "-" * 70 + "\n")
         
         results[name] = acc
 
@@ -200,7 +247,7 @@ def select_best_model(results: dict, models: dict):
 # === salva o melhor modelo escolido
 def save_model(model):
     joblib.dump(model, MODEL)
-    print(f"Modelo salvo em: {MODEL}")
+    print(f"Modelo salvo em: {MODEL}\n")
 
 def main():
     # 1 - carrega e pré-processa o dataset
@@ -225,15 +272,23 @@ def main():
     best_model = select_best_model(result, models)
     save_model(best_model)
 
-    print("\n===\n")
-    print("\nIniciando a comparação entre as plataformas\n")
-    print("\n===\n")
+    print("\n" + "-" * 70 + "\n")
+    print("\nIniciando a comparação entre as plataformas e gerando gráficos para fins analíticos\n")
+    print("\n" + "-" * 70 + "\n")
 
     # 7 - comparação entre plataformas
     correlacao = calculate_plataform_correlation(dataframe)
     plot_plataform_correlation(correlacao)
     subset = ["Spotify Streams", "YouTube Views", "TikTok Views", "Pandora Streams"]
-    scatter_plataform_correlation(dataframe, subset)    
+    scatter_plataform_correlation(dataframe, subset)
+
+    print("\n" + "-" * 70 + "\n")
+    print("\nIniciando a análise de impacto dos artistas e gerando gráficos para fins analíticos\n")
+    print("\n" + "-" * 70 + "\n")
+
+    # 8 - métricas dos artistas
+    metricas_artista = calculate_artist_metrics(dataframe)
+    plot_artitst_impact(metricas_artista)
 
 if __name__ == "__main__":
     main()
