@@ -245,7 +245,12 @@ def select_best_model(results: dict, models: dict):
     return best_model
 
 # === salva o melhor modelo escolido
-def save_model(model):
+def save_model(track_classification, platform_correlation, artist_metrics):
+    model = {
+        "track_classification": track_classification,
+        "platform_correlation": platform_correlation,
+        "artist_metrics": artist_metrics
+    }    
     joblib.dump(model, MODEL)
     print(f"Modelo salvo em: {MODEL}\n")
 
@@ -269,26 +274,27 @@ def main():
     result = evaluate(models, x_test, y_test)
 
     # 6 - seleciona e salva o melhor modelo
-    best_model = select_best_model(result, models)
-    save_model(best_model)
+    track_classification = select_best_model(result, models)
+    platform_correlation = calculate_plataform_correlation(dataframe)
+    artist_metrics = calculate_artist_metrics(dataframe)
+
+    save_model(track_classification, platform_correlation, artist_metrics)
 
     print("\n" + "-" * 70 + "\n")
-    print("\nIniciando a comparação entre as plataformas e gerando gráficos para fins analíticos\n")
+    print("\ngerando gráficos com a comparação entre as plataformas para fins analíticos\n")
     print("\n" + "-" * 70 + "\n")
 
-    # 7 - comparação entre plataformas
-    correlacao = calculate_plataform_correlation(dataframe)
-    plot_plataform_correlation(correlacao)
+    # 7 - plota o grafico com comparação entre plataformas
+    plot_plataform_correlation(platform_correlation)
     subset = ["Spotify Streams", "YouTube Views", "TikTok Views", "Pandora Streams"]
     scatter_plataform_correlation(dataframe, subset)
 
     print("\n" + "-" * 70 + "\n")
-    print("\nIniciando a análise de impacto dos artistas e gerando gráficos para fins analíticos\n")
+    print("\ngerando gráficos com a análise de impacto dos artistas para fins analíticos\n")
     print("\n" + "-" * 70 + "\n")
 
-    # 8 - métricas dos artistas
-    metricas_artista = calculate_artist_metrics(dataframe)
-    plot_artitst_impact(metricas_artista)
+    # 8 - plota o gráfico com as métricas dos artistas
+    plot_artitst_impact(artist_metrics)
 
 if __name__ == "__main__":
     main()
