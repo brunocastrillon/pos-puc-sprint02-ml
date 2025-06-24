@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 import os
@@ -6,37 +7,74 @@ import joblib
 import pandas as pd
 
 # -- carregando variaveis de ambiente
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, ".env"))
+load_dotenv()
 
-# -- carregando caminho do modelo
-MODEL_PATH = os.getenv("MODEL_PATH", "output_model.pkl")
+MODEL_PATH = os.getenv("MODEL_PATH")
+
+# -- Garante que ARTIFACT_PATH não seja vazio
+if not MODEL_PATH:
+    raise RuntimeError("A variável MODEL_PATH não está definida no .env")
 
 # -- carregando o modelo
 model = joblib.load(MODEL_PATH)
 
+print(">>> Keys in model:", model.keys())
+print(">>> type(model['track_classification']):", type(model.get("modtrack_classificationel")))
+print(">>> type(model['platform_correlation']):", type(model.get("platform_correlation")))
+print(">>> type(model['artist_metrics']):", type(model.get("artist_metrics")))
+print(">>> type(model['feature_names']):", type(model.get("feature_names")))
+
 track_classification = model["track_classification"]
 correlation_matrix = model["platform_correlation"]
 artist_metrics   = model["artist_metrics"]
+feature_names  = model["feature_names"]
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/predict-explict", methods=["POST"])
+@app.route("/predict-schema", methods=["GET"])
+def predict_schema():
+    return jsonify(feature_names)
+
+@app.route("/predict-explicit", methods=["POST"])
 def predict_explicit():
-    payload = request.get_json()
+    payload = request.get_json(force=True)
 
+    if not payload:
+        return jsonify({"error":"JSON inválido"})
+    
     dataframe = pd.DataFrame([payload])
-    predict = model.predict(dataframe)[0]
+
+    try:
+        predict = model.predict(dataframe)[0]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     return jsonify({"explict": bool(predict)})
 
-@app.route("/plataform_correlation", methods=["GET"])
+@app.route("/platform-correlation", methods=["GET"])
 def plataform_correlation():
-    return jsonify(plataform_correlation.to_dict())
+    corr_df = correlation_matrix
+    corr_json = {}
 
-@app.route("/artist_impact", methods=["GET"])
+    for idx in corr_df.index:
+        corr_json[str(idx)] = {}
+
+        for col in corr_df.columns:
+            val = corr_df.at[idx, col]
+
+            if pd.isna(val):
+                corr_json[str(idx)][str(col)] = None
+            else:
+                corr_json[str(idx)][str(col)] = float(val)
+    
+    return jsonify(corr_json)
+
+@app.route("/artist-impact", methods=["GET"])
 def get_artist_impact():
-    return jsonify(artist_metrics.to_dict(orient="records"))
+    records = artist_metrics.fillna(0).to_dict(orient="records")
+    
+    return jsonify(records)
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)

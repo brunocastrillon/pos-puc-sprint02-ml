@@ -245,11 +245,12 @@ def select_best_model(results: dict, models: dict):
     return best_model
 
 # === salva o melhor modelo escolido
-def save_model(track_classification, platform_correlation, artist_metrics):
+def save_model(track_classification, platform_correlation, artist_metrics, features):
     model = {
         "track_classification": track_classification,
         "platform_correlation": platform_correlation,
-        "artist_metrics": artist_metrics
+        "artist_metrics": artist_metrics,
+        "feature_names": features
     }    
     joblib.dump(model, MODEL)
     print(f"Modelo salvo em: {MODEL}\n")
@@ -278,7 +279,7 @@ def main():
     platform_correlation = calculate_plataform_correlation(dataframe)
     artist_metrics = calculate_artist_metrics(dataframe)
 
-    save_model(track_classification, platform_correlation, artist_metrics)
+    save_model(track_classification, platform_correlation, artist_metrics, features)
 
     print("\n" + "-" * 70 + "\n")
     print("\ngerando gráficos com a comparação entre as plataformas para fins analíticos\n")

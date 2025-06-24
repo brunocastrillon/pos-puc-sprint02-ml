@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Spotify MVP Dashboard</title>
+    <!-- Plotly versão explícita -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        #tabs button {
+            margin-right: 10px;
+            padding: 8px 16px;
+        }
+
+        .tab {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        form input {
+            width: 200px;
+            padding: 4px;
+            margin: 4px 0;
+        }
+
+        #btnPredict {
+            margin-top: 10px;
+            padding: 8px 16px;
+        }
+
+        #resPredict {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Spotify MVP Dashboard</h1>
+    <div id="tabs">
+        <button data-tab="predict">⚙️ Classificar Explícito</button>
+        <button data-tab="platform">📊 Platform Comparison</button>
+        <button data-tab="artist">🎤 Artist Impact</button>
+    </div>
+
+    <!-- === Aba de Classificação === -->
+    <div id="predict" class="tab">
+        <h2>Classificar Faixa</h2>
+        <form id="frmPredict"></form>
+        <button id="btnPredict">Prever</button>
+        <p id="resPredict"></p>
+    </div>
+
+    <!-- === Aba de Platform Comparison === -->
+    <div id="platform" class="tab">
+        <h2>Platform Comparison</h2>
+        <div id="heatmap" style="width:100%;max-width:800px;height:600px;"></div>
+    </div>
+
+    <!-- === Aba de Artist Impact === -->
+    <div id="artist" class="tab">
+        <h2>Artist Impact</h2>
+        <div id="bubble1" style="width:100%;max-width:600px;height:400px;"></div>
+        <div id="bubble2" style="width:100%;max-width:600px;height:400px;margin-top:20px;"></div>
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:5000";
+
+        // Controle de abas
+        document.querySelectorAll("#tabs button").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                document.getElementById(btn.dataset.tab).classList.add("active");
+            });
+        });
+        // Ativa primeira aba
+        document.querySelector("#tabs button").click();
+
+        // === Classificação Dinâmica ===
+        async function setupClassification() {
+            const form = document.getElementById("frmPredict");
+            const resultEl = document.getElementById("resPredict");
+            const btn = document.getElementById("btnPredict");
+
+            // Obtem schema
+            let fields = [];
+            try {
+                fields = await fetch(`${API}/predict-schema`).then(r => r.json());
+            } catch (err) {
+                alert("Erro ao buscar schema: " + err);
+                return;
+            }
+
+            // Monta inputs
+            fields.forEach(f => {
+                const label = document.createElement("label");
+                label.innerText = f;
+                label.style.display = "block";
+                const inp = document.createElement("input");
+                inp.name = f;
+                inp.type = "number";
+                inp.required = true;
+                inp.placeholder = "Digite um valor";
+                form.append(label, inp);
+            });
+
+            // Handler do botão
+            btn.addEventListener("click", async e => {
+                e.preventDefault();
+                resultEl.innerText = "";
+                btn.disabled = true;
+                resultEl.innerText = "Aguardando predição...";
+                const data = Object.fromEntries(new FormData(form));
+                try {
+                    const resp = await fetch(`${API}/predict-explicit`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data)
+                    });
+                    const { explicit, error } = await resp.json();
+                    if (error) {
+                        resultEl.innerText = "Erro: " + error;
+                    } else {
+                        resultEl.innerText = explicit
+                            ? "🚨 Conteúdo Explícito"
+                            : "✅ Não Explícito";
+                        resultEl.style.color = explicit ? "red" : "green";
+                    }
+                } catch (err) {
+                    resultEl.innerText = "Erro na requisição: " + err;
+                    resultEl.style.color = "black";
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        // === Platform Comparison ===
+        async function setupPlatform() {
+            try {
+                const corr = await fetch(`${API}/platform-correlation`).then(r => r.json());
+                const keys = Object.keys(corr);
+                const z = keys.map(i => Object.values(corr[i]));
+                Plotly.newPlot("heatmap", [{
+                    z, x: keys, y: keys, type: "heatmap", colorscale: "Viridis"
+                }], {
+                    margin: { t: 40, l: 100 },
+                    title: "Correlação entre Plataformas de Streaming"
+                });
+            } catch (err) {
+                document.getElementById("heatmap").innerText = "Erro: " + err;
+            }
+        }
+
+        // === Artist Impact ===
+        async function setupArtist() {
+            try {
+                const data = await fetch(`${API}/artist-impact`).then(r => r.json());
+                const names = data.map(d => d.Artist);
+                const tracks = data.map(d => d.num_tracks);
+                const streams = data.map(d => d.total_streams);
+                const pops = data.map(d => d.avg_popularity);
+
+                // #Faixas vs Streams
+                Plotly.newPlot("bubble1", [{
+                    x: tracks, y: streams, text: names, mode: "markers",
+                    marker: { size: pops.map(v => v * 2), sizemode: "area" }
+                }], { title: "#Faixas vs Streams Totais" });
+
+                // Popularidade Média vs Streams
+                Plotly.newPlot("bubble2", [{
+                    x: pops, y: streams, text: names, mode: "markers",
+                    marker: { size: tracks.map(v => v * 4), color: "green", sizemode: "area" }
+                }], { title: "Popularidade Média vs Streams Totais" });
+            } catch (err) {
+                document.getElementById("bubble1").innerText = "Erro: " + err;
+            }
+        }
+
+        // Inicializa tudo
+        setupClassification();
+        setupPlatform();
+        setupArtist();
+    </script>
+
+</body>
+
+</html>
