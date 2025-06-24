@@ -18,12 +18,6 @@ if not MODEL_PATH:
 # -- carregando o modelo
 model = joblib.load(MODEL_PATH)
 
-print(">>> Keys in model:", model.keys())
-print(">>> type(model['track_classification']):", type(model.get("modtrack_classificationel")))
-print(">>> type(model['platform_correlation']):", type(model.get("platform_correlation")))
-print(">>> type(model['artist_metrics']):", type(model.get("artist_metrics")))
-print(">>> type(model['feature_names']):", type(model.get("feature_names")))
-
 track_classification = model["track_classification"]
 correlation_matrix = model["platform_correlation"]
 artist_metrics   = model["artist_metrics"]
@@ -46,7 +40,7 @@ def predict_explicit():
     dataframe = pd.DataFrame([payload])
 
     try:
-        predict = model.predict(dataframe)[0]
+        predict = track_classification.predict(dataframe)[0]
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
