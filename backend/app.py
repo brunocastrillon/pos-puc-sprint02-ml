@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, json, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -44,7 +44,10 @@ def predict_explicit():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    return jsonify({"explict": bool(predict)})
+    response = {"classified": bool(predict)}
+    print(response)
+
+    return jsonify(response)
 
 @app.route("/platform-correlation", methods=["GET"])
 def plataform_correlation():
