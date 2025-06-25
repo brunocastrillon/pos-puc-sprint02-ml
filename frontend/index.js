@@ -88,13 +88,11 @@ async function setupTrackClassification() {
                 body: JSON.stringify(data)
             }).then(r => r.json());
 
-            console.log(classified);
-
             if (error) {
                 res.innerText = "Erro: " + error;
                 res.className = "text-danger";
             } else {
-                res.innerText = classified ? "🚨 Explícito" : "✅ Não Explícito";
+                res.innerText = classified ? "🚨 Contém conteúdo explícito" : "✅ Não contém conteúdo explícito";
                 res.className = classified ? "text-danger" : "text-success";
             }
         } catch (err) {
