@@ -13,6 +13,31 @@ async function setupTrackClassification() {
         return;
     }
 
+    const hints = {
+        "All Time Rank": "Classificação da música com base em sua popularidade histórica.",
+        "Track Score": "Pontuação atribuída à faixa com base em vários fatores",
+        "Spotify Streams": "Número total de transmissões no Spotify",
+        "Spotify Playlist Count": "Número de playlists do Spotify nas quais a música está incluída.",
+        "Spotify Playlist Reach": "Alcance da música nas playlists do Spotify",
+        "Spotify Popularity": "Pontuação de popularidade da música no Spotify (0-100)",
+        "YouTube Views": "Total de visualizações do vídeo oficial da música no YouTube",
+        "YouTube Likes": "Total de curtidas no vídeo oficial da música no YouTube",
+        "TikTok Posts": "Número de postagens no TikTok com a música",
+        "TikTok Likes": "Total de curtidas em postagens do TikTok com a música.",
+        "TikTok Views": "Total de visualizações em postagens do TikTok com a música",
+        "YouTube Playlist Reach": "Alcance da música nas playlists do YouTube",
+        "Apple Music Playlist Count": "Número de playlists do Apple Music em que a música está incluída",
+        "AirPlay Spins": "Número de vezes que a música foi tocada no AirPlay",
+        "SiriusXM Spins": "Número de vezes que a música foi tocada no SiriusXM",
+        "Deezer Playlist Count": "Número de playlists do Deezer em que a música está incluída",
+        "Deezer Playlist Reach": "Alcance da música nas playlists do Deezer",
+        "Amazon Playlist Count": "Número de playlists da Amazon Music em que a música está incluída",
+        "Pandora Streams": "Número total de transmissões no Pandora",
+        "Pandora Track Stations": "Número de estações Pandora que apresentam a música",
+        "Soundcloud Streams": "Número total de transmissões no Soundcloud",
+        "Shazam Counts": "Número total de vezes que a música foi Shazamada",
+    };
+
     fields.forEach(f => {
         const col = document.createElement("div");
         col.className = "col-md-4 col-lg-2";
@@ -28,7 +53,14 @@ async function setupTrackClassification() {
         inp.required = true;
         inp.placeholder = "";
 
-        col.append(label, inp);
+        const hint = document.createElement("div");
+        hint.className = "form-text text-muted d-none";
+        hint.innerText = hints[f] || "";
+
+        inp.addEventListener("focus", () => hint.classList.remove("d-none"));
+        inp.addEventListener("blur", () => hint.classList.add("d-none"));
+
+        col.append(label, inp, hint);
         form.append(col);
     });
 
