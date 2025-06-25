@@ -45,7 +45,6 @@ def predict_explicit():
         return jsonify({"error": str(e)}), 500
 
     response = {"classified": bool(predict)}
-    print(response)
 
     return jsonify(response)
 
