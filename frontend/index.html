@@ -9,6 +9,12 @@
 
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
 
+    <!-- PapaParse para CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    
+    <!-- SheetJS para Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <link href="index.css" rel="stylesheet" />
 </head>
 
@@ -48,6 +54,13 @@
                     
                     <p class="lead">Preencha as métricas da faixa musical abaixo para que o modelo preveja se a faixa musical contém conteúdo explícito ou não.</p>
                     
+                    <!-- Upload de arquivo para preenchimento automático -->
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">Ou se preferir, faça o upload do CSV ou Excel com as informações solicitadas abaixo</label>
+                        <input class="form-control" type="file" id="fileInput" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                        <div class="form-text">Selecione um arquivo com cabeçalho correspondente aos campos.</div>
+                    </div> 
+
                     <hr />
                     
                     <form id="frmPredict" class="row g-3"></form>

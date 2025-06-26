@@ -49,6 +49,7 @@ async function setupTrackClassification() {
         const inp = document.createElement("input");
         inp.name = f;
         inp.type = "number";
+        inp.step = "any";  // permite decimais
         inp.className = "form-control";
         inp.required = true;
         inp.placeholder = "";
@@ -65,14 +66,39 @@ async function setupTrackClassification() {
     });
 
     btn.disabled = true;
-
-    const inputs = form.querySelectorAll("input");
-
-    inputs.forEach(input => {
+    form.querySelectorAll("input").forEach(input => {
         input.addEventListener("input", () => {
             btn.disabled = !form.checkValidity();
         });
     });
+
+    document.getElementById("fileInput").addEventListener("change", handleFileUpload);
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        let data;
+        
+        if (ext === 'csv') {
+            const text = await file.text();
+            data = Papa.parse(text, { header: true }).data[0];
+        } else {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(buf, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            
+            data = XLSX.utils.sheet_to_json(sheet)[0];
+        }
+
+        form.querySelectorAll('input').forEach(inp => {
+            if (data[inp.name] !== undefined) inp.value = data[inp.name];
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        btn.disabled = !form.checkValidity();
+    }
 
     btn.addEventListener("click", async e => {
         e.preventDefault();
@@ -98,9 +124,7 @@ async function setupTrackClassification() {
         } catch (err) {
             res.innerText = "Falha na requisição: " + err;
             res.className = "text-warning";
-        } finally {
-            btn.disabled = false;
-        }
+        } finally { btn.disabled = !form.checkValidity(); }
     });
 }
 
