@@ -75,12 +75,12 @@ async function setupTrackClassification() {
     document.getElementById("fileInput").addEventListener("change", handleFileUpload);
     async function handleFileUpload(event) {
         const file = event.target.files[0];
-        
+
         if (!file) return;
 
         const ext = file.name.split('.').pop().toLowerCase();
         let data;
-        
+
         if (ext === 'csv') {
             const text = await file.text();
             data = Papa.parse(text, { header: true }).data[0];
@@ -88,7 +88,7 @@ async function setupTrackClassification() {
             const buf = await file.arrayBuffer();
             const wb = XLSX.read(buf, { type: 'array' });
             const sheet = wb.Sheets[wb.SheetNames[0]];
-            
+
             data = XLSX.utils.sheet_to_json(sheet)[0];
         }
 
@@ -99,6 +99,14 @@ async function setupTrackClassification() {
 
         btn.disabled = !form.checkValidity();
     }
+
+    btnClear.addEventListener("click", () => {
+        form.reset();
+        fileInput.value = "";
+        resPredict.innerText = "";
+        form.querySelectorAll(".form-text").forEach(h => h.classList.add("d-none"));
+        btn.disabled = true;
+    });
 
     btn.addEventListener("click", async e => {
         e.preventDefault();
