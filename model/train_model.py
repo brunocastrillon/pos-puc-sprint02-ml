@@ -29,7 +29,7 @@ FILE = os.getenv("DATA_FILE")
 MODEL = os.getenv("MODEL_PATH")
 PLOT_GRAPH = os.getenv("PLOT_GRAPH")
 
-TARGET = "Explicit Classified" #"Explicit Track"
+TARGET = "Explicit Classified"
 
 IGNORE_COLS = [TARGET, "Explicit Track"]
 
@@ -145,15 +145,6 @@ def get_feature_columns(dataframe: pd.DataFrame) -> list:
             print(f"{c}")
             continue
     
-    # colunas_numericas_validas = []
-    # for c in colunas_numericas:
-    #     if c in IGNORE_COLS:
-    #         continue
-    #     if dataframe[c].isna().all():
-    #         print(f"===> removendo coluna sem dados: {c}")
-    #         continue
-    #     colunas_numericas_validas.append[c]
-
     return colunas_numericas_validas
 
 # === separando os conjutos de treino e teste
