@@ -145,4 +145,4 @@ Este projeto está licenciado sob [MIT](LICENSE) — veja o arquivo de licença 
 
 ---
 
-*Desenvolvido por Bruno Castrillón*
+📌 Projeto desenvolvido para fins acadêmicos no curso de Pós-Graduação em Engenharia de Software
