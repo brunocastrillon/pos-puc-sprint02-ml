@@ -135,14 +135,6 @@ pytest --maxfail=1 -q
 
 * Garante **acurácia ≥ 62%** e **F1-weighted ≥ 58%** antes de qualquer deploy.
 
-## 🤝 Contribuição
-
-Contribuições são bem-vindas! Abra issues ou pull requests para novas features ou correções.
-
-## 📄 Licença
-
-Este projeto está licenciado sob [MIT](LICENSE) — veja o arquivo de licença para detalhes.
-
 ---
 
 📌 Projeto desenvolvido para fins acadêmicos no curso de Pós-Graduação em Engenharia de Software
