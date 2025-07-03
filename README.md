@@ -40,27 +40,27 @@ O projeto implementa um fluxo completo de **Machine Learning** e **entrega de so
 
 ```
 pos-puc-sprint02-ml/
-├── backend/                                            # API Flask
-│   └── app.py                                          # Endpoints de predição e métricas
-├── frontend/                                           # Arquivos estáticos (HTML, JS, CSS)
-│   ├── index.css                                       # folha de estilo
-│   ├── index.html                                      # UI principal
-│   └── index.js                                        # Lógica de chamada aos endpoints
-├── misc/                                               # arquivos de apoio
-│   ├── most_streamed_spotify_songs_2024.ipynb          # notebook para executar o treinamento via Colab
-│   ├── test_upload_explicito.csv                       # arquivo com parametros de referência para executar testes de predição no frontend via upload
-│   └── test_upload_nao_explicito.csv                   # arquivo com parametros de referência para executar testes de predição no frontend via upload
-├── model/                                              # Scripts e artefatos de ML
-│   ├── artifacts/                                      # artefato gerado após treinamento do modelo localmente via Visual Studio Code
-│       └── output_model.pkl                            # artefato gerado para ser consumido pelo Backend(app.py)
-│   ├── dataset/                                        # CSV com dataset retirado de Kaggle(https://www.kaggle.com/datasets/nelgiriyewithana/most-streamed-spotify-songs-2024)
-│       └── most_streamed_spotify_songs_2024.csv        # esse CSV é uma versão 2 do link acima, possui uma coluna a mais "Explicit Classified"
-│   └── train_model.py                                  # Script de treinamento local
-├── tests/                                              # Testes PyTest
+├── backend/                                          # API Flask
+│   └── app.py                                        # Endpoints de predição e métricas
+├── frontend/                                         # Arquivos estáticos (HTML, JS, CSS)
+│   ├── index.css                                     # folha de estilo
+│   ├── index.html                                    # UI principal
+│   └── index.js                                      # Lógica de chamada aos endpoints
+├── misc/                                             # arquivos de apoio
+│   ├── most_streamed_spotify_songs_2024.ipynb        # notebook para executar o treinamento via Colab
+│   ├── test_upload_explicito.csv                     # arquivo com parametros de referência para executar testes de predição no frontend via upload
+│   └── test_upload_nao_explicito.csv                 # arquivo com parametros de referência para executar testes de predição no frontend via upload
+├── model/                                            # Scripts e artefatos de ML
+│   ├── artifacts/                                    # artefato gerado após treinamento do modelo localmente via Visual Studio Code
+│       └── output_model.pkl                          # artefato gerado para ser consumido pelo Backend(app.py)
+│   ├── dataset/                                      # CSV com dataset retirado de Kaggle(https://www.kaggle.com/datasets/nelgiriyewithana/most-streamed-spotify-songs-2024)
+│       └── most_streamed_spotify_songs_2024.csv      # esse CSV é uma versão 2 do link acima, possui uma coluna a mais "Explicit Classified"
+│   └── train_model.py                                # Script de treinamento local
+├── tests/                                            # Testes PyTest
 │   └── test_model_performance.py
-├── .env                                                # variáveis de ambiente para setar a origem do dataset para treinamento, o destino do artefato gerado e pltagem de graficos
-├── requirements.txt                                    # Dependências Python
-└── README.md                                           # Documentação (este arquivo)
+├── .env                                              # variáveis de ambiente para setar a origem do dataset para treinamento, o destino do artefato gerado e pltagem de graficos
+├── requirements.txt                                  # Dependências Python
+└── README.md                                         # Documentação (este arquivo)
 ```
 
 ## 🛠️ Pré-requisitos
