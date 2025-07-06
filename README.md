@@ -6,7 +6,7 @@ Este repositório contém todas as partes programáveis do MVP de classificaçã
 
 O projeto implementa um fluxo completo de **Machine Learning** e **entrega de software**:
 
-1. **Notebook de EDA e Treinamento** (`ml_mvp_spotify_v2.ipynb`):
+1. **Notebook de EDA e Treinamento** (`most_streamed_spotify_songs_2024.ipynb`):
 
    * Exploração e visualização de dados
    * Pré-processamento e limpeza
@@ -14,7 +14,7 @@ O projeto implementa um fluxo completo de **Machine Learning** e **entrega de so
    * Otimização de hiperparâmetros com GridSearchCV
    * Avaliação de desempenho e exportação do artefato
 
-2. **Script de Treinamento Local** (`model/train_model_v2.py`):
+2. **Script de Treinamento Local** (`model/train_model.py`):
 
    * Mesma lógica do notebook, mas executável em linha de comando
    * Permite integração com IDEs (VS Code)
@@ -88,16 +88,16 @@ pos-puc-sprint02-ml/
 ## 🧪 Executando o Notebook
 
 * Abra o Colab:
-  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/brunocastrillon/pos-puc-sprint02-ml/blob/master/ml_mvp_spotify_v2.ipynb)
+  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/brunocastrillon/pos-puc-sprint02-ml/blob/master/misc/most_streamed_spotify_songs_2024.ipynb)
 * Execute todas as células para EDA, modelagem e exportação do artefato.
 
 ## ▶️ Treinamento Local
 
 ```bash
-python model/train_model_v2.py
+python model/train_model.py
 ```
 
-* Gera `artifact_spotify_mvp_v2.pkl` com:
+* Gera `output_model.pkl` com:
 
   * Pipeline treinado
   * Matriz de correlação
@@ -110,8 +110,9 @@ python model/train_model_v2.py
 
    ```ini
    DATA_SOURCE=local
-   DATA_FILE=model/dataset/most_streamed_spotify_songs_2024_v2.csv
-   MODEL_PATH=artifact_spotify_mvp_v2.pkl
+   DATA_URL=https://raw.githubusercontent.com/brunocastrillon/pos-puc-sprint02-ml/master/model/dataset/most_streamed_spotify_songs_2024.csv
+   DATA_FILE=model/dataset/most_streamed_spotify_songs_2024.csv
+   MODEL_PATH=model/artifacts/output_model.pkl
    ```
 2. Inicie o servidor:
 
